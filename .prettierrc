@@ -5,5 +5,25 @@
   "semi": true,
   "singleQuote": true,
   "trailingComma": "all",
-  "jsxBracketSameLine": false
+  "jsxBracketSameLine": false,
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "importOrder": [
+    "^react",
+    "^next",
+    "<THIRD_PARTY_MODULES>",
+    "^@/types",
+    "^@/(consts|forms)",
+    "^@/(lib|libs|utils)",
+    "^@/contexts",
+    "^@/hooks",
+    "^@/services",
+    "^@/components",
+    "^@/pages",
+    "^[./](?!.*\\.(svg|png|jpe?g|gif|webp)$)",
+    "^@/assets",
+    "^[./].*\\.(svg|png|jpe?g|gif|webp)$"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "importOrderParserPlugins": ["typescript", "jsx"]
 }
