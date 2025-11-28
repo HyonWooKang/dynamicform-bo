@@ -1,31 +1,31 @@
-import React, { type FormEvent, useState } from 'react';
+import { type FormEvent, useState } from 'react';
 
 import { AlertCircle, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 
+import { useAuth } from '@/contexts/auth';
 import { useLoading } from '@/contexts/loading';
 
 interface FormErrors {
-  email?: string;
+  username?: string;
   password?: string;
   general?: string;
 }
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loginSuccess, setLoginSuccess] = useState(false);
 
   const { startLoading, endLoading } = useLoading();
+  const { login, user } = useAuth();
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!email) {
-      newErrors.email = '이메일을 입력해주세요.';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = '올바른 이메일 형식이 아닙니다.';
+    if (!username) {
+      newErrors.username = '아이디를 입력해주세요.';
     }
 
     if (!password) {
@@ -47,14 +47,17 @@ export default function LoginPage() {
     startLoading(loadingKey, '로그인 중입니다...\n잠시만 기다려주세요.');
 
     try {
-      // 실제 API 호출 시뮬레이션
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      console.log('로그인 시도:', { email, password });
+      await login(username, password);
+      console.log('로그인 시도:', { username });
       setLoginSuccess(true);
+      setErrors({});
     } catch (error) {
       console.error('로그인 실패:', error);
-      setErrors({ general: '로그인에 실패했습니다. 다시 시도해주세요.' });
+      const errorMessage =
+        error instanceof Error && error.message === 'INVALID_CREDENTIALS'
+          ? '아이디 또는 비밀번호가 올바르지 않습니다.'
+          : '로그인에 실패했습니다. 다시 시도해주세요.';
+      setErrors({ general: errorMessage });
     } finally {
       endLoading(loadingKey);
     }
@@ -76,6 +79,7 @@ export default function LoginPage() {
   };
 
   if (loginSuccess) {
+    const displayName = user?.displayName ?? username;
     return (
       <div className="h-screen w-screen bg-white flex items-center justify-center p-0 overflow-hidden">
         <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4 text-center">
@@ -97,7 +101,7 @@ export default function LoginPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
             로그인 성공!
           </h2>
-          <p className="text-gray-600">환영합니다, {email}</p>
+          <p className="text-gray-600">환영합니다, {displayName}</p>
         </div>
       </div>
     );
@@ -126,36 +130,36 @@ export default function LoginPage() {
 
         {/* 로그인 폼 */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 이메일 입력 */}
+          {/* 아이디 입력 */}
           <div>
             <label
-              htmlFor="email"
+              htmlFor="username"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              이메일
+              아이디
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
-                type="email"
-                id="email"
-                value={email}
+                type="text"
+                id="username"
+                value={username}
                 onChange={(e) => {
-                  setEmail(e.target.value);
-                  setErrors({ ...errors, email: '', general: '' });
+                  setUsername(e.target.value);
+                  setErrors({ ...errors, username: '', general: '' });
                 }}
                 className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                  errors.email
+                  errors.username
                     ? 'border-red-300 focus:ring-red-500'
                     : 'border-gray-300 focus:ring-indigo-500'
                 }`}
-                placeholder="example@email.com"
+                placeholder="로그인 아이디를 입력하세요"
               />
             </div>
-            {errors.email && (
+            {errors.username && (
               <div className="flex items-center mt-2 text-sm text-red-600">
                 <AlertCircle className="w-4 h-4 mr-1" />
-                {errors.email}
+                {errors.username}
               </div>
             )}
           </div>
