@@ -1,22 +1,71 @@
+import AnalyticsOverview from '@/components/analytics/AnalyticsOverview';
+import DataBoard from '@/components/data-board/DataBoard';
+import KioskStatusMonitor from '@/components/kiosk/KioskStatusMonitor';
+import StatHighlights from '@/components/stats/StatHighlights';
+import {
+  dashboardRegionColumns,
+  dashboardTopMenuColumns,
+  dashboardTopStoreColumns,
+} from '@/columns/dashboard';
+import {
+  dashboardCategoryShare,
+  dashboardHourlySalesTrend,
+  dashboardKioskStatus,
+  dashboardOverviewMetrics,
+  dashboardRegionData,
+  dashboardStatHighlights,
+  dashboardTopMenuData,
+  dashboardTopStoreData,
+} from '@/data/dashboard';
+
 export default function DashboardPage() {
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">대시보드</h1>
-      <p className="text-gray-600">
-        팀의 주요 지표와 최근 활동을 한눈에 확인할 수 있습니다.
-      </p>
-      <div className="mt-6 grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-        {['신규 가입자', '전환율', '서비스 가용성'].map((label) => (
-          <div
-            key={label}
-            className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
-          >
-            <p className="text-sm text-gray-500">{label}</p>
-            <p className="mt-2 text-2xl font-semibold text-gray-900">
-              준비 중...
-            </p>
-          </div>
-        ))}
+    <div className="space-y-8 p-8">
+      <div>
+        <p className="text-sm font-semibold text-amber-600">MEGI COFFEE</p>
+        <h1 className="text-3xl font-bold text-gray-900">
+          커피 브랜드 매출 관리 대시보드
+        </h1>
+        <p className="text-gray-600">
+          전국 매장의 실시간 매출 흐름, 인기 메뉴, 키오스크 상태까지 한 번에
+          확인하세요.
+        </p>
+      </div>
+
+      <StatHighlights items={dashboardStatHighlights} />
+
+      <AnalyticsOverview
+        title="시간대별 매출 & 카테고리 비중"
+        description="모닝/카페 피크 시간과 카테고리별 매출 비율을 동시에 모니터링합니다."
+        trend={dashboardHourlySalesTrend}
+        pie={dashboardCategoryShare}
+        metrics={dashboardOverviewMetrics}
+      />
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <DataBoard
+          title="지점별 매출 TOP 10"
+          columns={dashboardTopStoreColumns}
+          data={dashboardTopStoreData}
+          searchPlaceholder="지점명 검색"
+        />
+        <DataBoard
+          title="가장 많이 팔린 메뉴 TOP 10"
+          columns={dashboardTopMenuColumns}
+          data={dashboardTopMenuData}
+          searchPlaceholder="메뉴 검색"
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DataBoard
+          title="지역별 매출 비교"
+          columns={dashboardRegionColumns}
+          data={dashboardRegionData}
+          searchPlaceholder="지역명 검색"
+        />
+
+        <KioskStatusMonitor items={dashboardKioskStatus} />
       </div>
     </div>
   );
