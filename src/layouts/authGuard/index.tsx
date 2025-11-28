@@ -24,7 +24,11 @@ export default function AuthGuard({ navItems }: AuthGuardProps) {
 
   if (!user) {
     return (
-      <Navigate to="/login" replace state={{ from: location.pathname ?? '/' }} />
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location.pathname ?? '/' }}
+      />
     );
   }
 
@@ -34,10 +38,10 @@ export default function AuthGuard({ navItems }: AuthGuardProps) {
   };
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-gray-50">
+    <div className="flex h-screen w-full flex-col bg-gray-50">
       <header className="flex items-center justify-between border-b border-gray-200 bg-white px-8 py-4">
         <h1 className="text-lg font-semibold text-gray-900">
-          Dynamic Form Console
+          MEGI Coffee Control Center
         </h1>
         <div className="flex items-center gap-4 text-sm text-gray-600">
           <span className="font-medium text-gray-900">{user.displayName}</span>
@@ -51,7 +55,7 @@ export default function AuthGuard({ navItems }: AuthGuardProps) {
         </div>
       </header>
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden">
         <aside className="flex w-64 flex-col border-r border-gray-200 bg-white px-6 py-10">
           <nav className="flex-1 space-y-1">
             {navItems
@@ -76,11 +80,9 @@ export default function AuthGuard({ navItems }: AuthGuardProps) {
           </nav>
         </aside>
 
-        <main className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-auto bg-gray-50">
-            <div className="mx-auto max-w-6xl py-10">
-              <Outlet />
-            </div>
+        <main className="flex flex-1 flex-col overflow-y-auto bg-gray-50">
+          <div className="mx-auto max-w-6xl py-10">
+            <Outlet />
           </div>
         </main>
       </div>
