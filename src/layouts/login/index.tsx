@@ -1,6 +1,7 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 
 import { AlertCircle, Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '@/contexts/auth';
 import { useLoading } from '@/contexts/loading';
@@ -16,10 +17,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const { startLoading, endLoading } = useLoading();
   const { login, user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true });
+    }
+  }, [navigate, user]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -30,8 +37,6 @@ export default function LoginPage() {
 
     if (!password) {
       newErrors.password = '비밀번호를 입력해주세요.';
-    } else if (password.length < 6) {
-      newErrors.password = '비밀번호는 최소 6자 이상이어야 합니다.';
     }
 
     setErrors(newErrors);
@@ -49,8 +54,8 @@ export default function LoginPage() {
     try {
       await login(username, password);
       console.log('로그인 시도:', { username });
-      setLoginSuccess(true);
       setErrors({});
+      navigate('/', { replace: true });
     } catch (error) {
       console.error('로그인 실패:', error);
       const errorMessage =
@@ -77,35 +82,6 @@ export default function LoginPage() {
       endLoading(loadingKey);
     }
   };
-
-  if (loginSuccess) {
-    const displayName = user?.displayName ?? username;
-    return (
-      <div className="h-screen w-screen bg-white flex items-center justify-center p-0 overflow-hidden">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            로그인 성공!
-          </h2>
-          <p className="text-gray-600">환영합니다, {displayName}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-screen w-screen bg-white flex items-center justify-center p-0 overflow-hidden">
