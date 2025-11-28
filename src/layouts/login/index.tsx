@@ -84,7 +84,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen w-screen bg-white flex items-center justify-center p-0 overflow-hidden">
+    <div className="min-h-screen w-full bg-white flex items-center justify-center p-0">
       {/* <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md mx-4"> */}
       <div className="w-full max-w-md mx-4 p-8">
         {/* 헤더 */}
