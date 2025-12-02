@@ -1,8 +1,11 @@
-import { Navigate, Outlet, type RouteObject } from 'react-router-dom';
+﻿import { Navigate, Outlet, type RouteObject } from 'react-router-dom';
 
 import AuthGuard from '@/layouts/authGuard';
 import LoginPage from '@/layouts/login';
 import AnalyticsPage from '@/pages/analytics';
+import BranchCreatePage from '@/pages/branch/create';
+import BranchDetailPage from '@/pages/branch/detail';
+import BranchManagementPage from '@/pages/branch';
 import DashboardPage from '@/pages/dashboard';
 import MenuDetailPage from '@/pages/menu/detail';
 import MenuManagementPage from '@/pages/menu';
@@ -22,7 +25,26 @@ const protectedChildRoutes: ExtendRouteObject[] = [
   {
     path: 'analytics',
     element: <AnalyticsPage />,
-    title: '통계',
+    title: '분석',
+  },
+  {
+    path: 'branch',
+    title: '지점관리',
+    element: <Outlet />,
+    children: [
+      {
+        index: true,
+        element: <BranchManagementPage />,
+      },
+      {
+        path: 'create',
+        element: <BranchCreatePage />,
+      },
+      {
+        path: ':branchId',
+        element: <BranchDetailPage />,
+      },
+    ],
   },
   {
     path: 'menu',

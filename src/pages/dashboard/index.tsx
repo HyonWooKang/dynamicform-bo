@@ -23,9 +23,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 p-8">
       <div>
-        <p className="text-sm font-semibold text-amber-600">MEGI COFFEE</p>
+        <p className="text-sm font-semibold text-amber-600">SUPER COFFEE</p>
         <h1 className="text-3xl font-bold text-gray-900">
-          MEGI COFFEE 대시보드
+          SUPER COFFEE 대시보드
         </h1>
         <p className="text-gray-600">
           전국 매장의 실시간 매출 흐름, 인기 메뉴, 키오스크 상태까지 한 번에
