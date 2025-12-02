@@ -64,7 +64,7 @@ const protectedChildRoutes: ExtendRouteObject[] = [
   {
     path: 'settings/tags',
     element: <TagSettingsPage />,
-    title: '설정',
+    title: '카테고리 관리',
   },
 ];
 

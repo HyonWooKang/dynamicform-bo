@@ -51,6 +51,7 @@ export default function MenuManagementPage() {
   const { menus, addMenu } = useMenu();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [filters, setFilters] = useState<MenuFilters>(defaultFilters);
+  const [draftFilters, setDraftFilters] = useState<MenuFilters>(defaultFilters);
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
@@ -131,14 +132,19 @@ export default function MenuManagementPage() {
     setPage(1);
   };
 
-  const updateFilter = <K extends keyof MenuFilters>(
+  const updateDraftFilter = <K extends keyof MenuFilters>(
     key: K,
     value: MenuFilters[K],
   ) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
+    setDraftFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const applyFilters = () => {
+    setFilters(draftFilters);
   };
 
   const handleResetFilters = () => {
+    setDraftFilters(defaultFilters);
     setFilters(defaultFilters);
   };
 
@@ -165,14 +171,19 @@ export default function MenuManagementPage() {
               키워드, 카테고리, 판매 구분, 키오스크 노출 조건으로 필터링합니다.
             </p>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleResetFilters}
-          >
-            필터 초기화
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleResetFilters}
+            >
+              필터 초기화
+            </Button>
+            <Button type="button" size="sm" onClick={applyFilters}>
+              검색
+            </Button>
+          </div>
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-4">
           <div className="space-y-2">
@@ -185,15 +196,17 @@ export default function MenuManagementPage() {
             <Input
               id="menu-keyword"
               placeholder="메뉴명, 태그, 설명 검색"
-              value={filters.keyword}
-              onChange={(event) => updateFilter('keyword', event.target.value)}
+              value={draftFilters.keyword}
+              onChange={(event) =>
+                updateDraftFilter('keyword', event.target.value)
+              }
             />
           </div>
           <div className="space-y-2">
             <p className="text-sm font-medium text-gray-700">카테고리</p>
             <Select
-              value={filters.category}
-              onValueChange={(value) => updateFilter('category', value)}
+              value={draftFilters.category}
+              onValueChange={(value) => updateDraftFilter('category', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="카테고리 전체" />
@@ -211,9 +224,9 @@ export default function MenuManagementPage() {
           <div className="space-y-2">
             <p className="text-sm font-medium text-gray-700">판매 구분</p>
             <Select
-              value={filters.availability}
+              value={draftFilters.availability}
               onValueChange={(value) =>
-                updateFilter(
+                updateDraftFilter(
                   'availability',
                   value as MenuFilters['availability'],
                 )
@@ -236,9 +249,9 @@ export default function MenuManagementPage() {
             <div className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2">
               <Checkbox
                 id="kiosk-only"
-                checked={filters.kioskOnly}
+                checked={draftFilters.kioskOnly}
                 onCheckedChange={(checked) =>
-                  updateFilter('kioskOnly', checked === true)
+                  updateDraftFilter('kioskOnly', checked === true)
                 }
               />
               <label htmlFor="kiosk-only" className="text-sm text-gray-600">
