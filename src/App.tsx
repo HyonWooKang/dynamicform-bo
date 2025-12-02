@@ -3,6 +3,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/auth';
 import { LoadingProvider } from './contexts/loading';
 import { MenuProvider } from './contexts/menu';
+import { TagProvider } from './contexts/tags';
 import { routes } from './routes';
 
 function App() {
@@ -12,7 +13,9 @@ function App() {
     <AuthProvider>
       <LoadingProvider>
         <MenuProvider>
-          <RouterProvider router={router} />
+          <TagProvider>
+            <RouterProvider router={router} />
+          </TagProvider>
         </MenuProvider>
       </LoadingProvider>
     </AuthProvider>

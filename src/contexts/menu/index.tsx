@@ -13,6 +13,7 @@ type MenuContextValue = {
   menus: MenuItem[];
   addMenu: (menu: MenuItem) => void;
   updateMenu: (menu: MenuItem) => void;
+  removeTagFromMenus: (tag: string) => void;
 };
 
 const MenuContext = createContext<MenuContextValue | null>(null);
@@ -34,11 +35,22 @@ export function MenuProvider({ children }: MenuProviderProps) {
     );
   };
 
+  const removeTagFromMenus = (tag: string) => {
+    setMenus((previous) =>
+      previous.map((item) =>
+        item.tags.includes(tag)
+          ? { ...item, tags: item.tags.filter((existing) => existing !== tag) }
+          : item,
+      ),
+    );
+  };
+
   const value = useMemo(
     () => ({
       menus,
       addMenu,
       updateMenu,
+      removeTagFromMenus,
     }),
     [menus],
   );

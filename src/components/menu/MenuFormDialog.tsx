@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { MENU_AVAILABILITY_OPTIONS, MENU_CATEGORIES } from '@/constants/menu';
@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTags } from '@/contexts/tags';
 
 type MenuFormValues = {
   name: string;
@@ -35,7 +37,7 @@ type MenuFormValues = {
   releaseDate: string;
   imageUrl: string;
   description: string;
-  tags: string;
+  tags: string[];
   highlights: string;
   ingredients: string;
   recipe: string;
@@ -58,7 +60,7 @@ const createDefaultMenuFormValues = (): MenuFormValues => ({
   releaseDate: new Date().toISOString().split('T')[0],
   imageUrl: '',
   description: '',
-  tags: '',
+  tags: [],
   highlights: '',
   ingredients: '',
   recipe: '',
@@ -78,7 +80,7 @@ const mapMenuToFormValues = (menu: MenuItem): MenuFormValues => ({
   releaseDate: menu.releaseDate,
   imageUrl: menu.imageUrl,
   description: menu.description,
-  tags: menu.tags.join(', '),
+  tags: menu.tags,
   highlights: menu.highlights.join('\n'),
   ingredients: menu.ingredients
     .map((item) => (item.detail ? `${item.name} - ${item.detail}` : item.name))
@@ -128,7 +130,7 @@ const buildMenuItemFromForm = (
       'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80',
     description: values.description.trim(),
     releaseDate: values.releaseDate || new Date().toISOString().split('T')[0],
-    tags: parseList(values.tags, ','),
+    tags: values.tags,
     highlights: parseList(values.highlights, /\n+/),
     ingredients,
     recipe,
@@ -156,6 +158,16 @@ export default function MenuFormDialog({
   onSubmit,
   initialMenu,
 }: MenuFormDialogProps) {
+  const { tags: managedTags } = useTags();
+  const tagOptions = useMemo(
+    () =>
+      Array.from(
+        new Set([...(initialMenu?.tags ?? []), ...managedTags]).values(),
+      ),
+    [initialMenu?.tags, managedTags],
+  );
+  const hasTagOptions = tagOptions.length > 0;
+
   const form = useForm<MenuFormValues>({
     mode: 'onChange',
     defaultValues: initialMenu
@@ -400,24 +412,67 @@ export default function MenuFormDialog({
             />
 
             <div className="grid gap-6 md:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="tags"
-                render={({ field }) => (
+            <FormField
+              control={form.control}
+              name="tags"
+              rules={{
+                validate: (value) =>
+                  value && value.length > 0
+                    ? true
+                    : '태그를 한 개 이상 선택하세요',
+              }}
+              render={({ field }) => {
+                const selectedTags = field.value ?? [];
+
+                const toggleTag = (tag: string, checked: boolean) => {
+                  if (checked) {
+                    field.onChange([...selectedTags, tag]);
+                  } else {
+                    field.onChange(selectedTags.filter((item) => item !== tag));
+                  }
+                };
+
+                return (
                   <FormItem>
                     <FormLabel>태그</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="콤마(,)로 구분 · 예: Signature, Local"
-                        {...field}
-                      />
+                      <div className="rounded-lg border border-gray-200 p-4">
+                        {hasTagOptions ? (
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {tagOptions.map((tag) => (
+                              <label
+                                key={tag}
+                                className="flex cursor-pointer items-center gap-2 text-sm text-gray-700"
+                              >
+                                <Checkbox
+                                  checked={selectedTags.includes(tag)}
+                                  onCheckedChange={(checked) =>
+                                    toggleTag(tag, checked === true)
+                                  }
+                                />
+                                <span>#{tag}</span>
+                              </label>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">
+                            등록된 태그가 없습니다. 설정 &gt; 태그 관리에서 태그를
+                            먼저 추가하세요.
+                          </p>
+                        )}
+                      </div>
                     </FormControl>
+                    <FormDescription>
+                      태그는 태그 관리 화면에서만 추가/삭제할 수 있습니다.
+                    </FormDescription>
+                    <FormMessage />
                   </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="allergens"
+                );
+              }}
+            />
+            <FormField
+              control={form.control}
+              name="allergens"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>알러지</FormLabel>
@@ -527,7 +582,7 @@ export default function MenuFormDialog({
               <Button type="button" variant="ghost" onClick={handleClose}>
                 취소
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={!hasTagOptions}>
                 {mode === 'create' ? '메뉴 등록' : '변경사항 저장'}
               </Button>
             </div>

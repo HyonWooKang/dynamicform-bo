@@ -6,6 +6,7 @@ import AnalyticsPage from '@/pages/analytics';
 import DashboardPage from '@/pages/dashboard';
 import MenuDetailPage from '@/pages/menu/detail';
 import MenuManagementPage from '@/pages/menu';
+import TagSettingsPage from '@/pages/settings/tags';
 
 export type ExtendRouteObject = RouteObject & {
   title?: string;
@@ -37,6 +38,11 @@ const protectedChildRoutes: ExtendRouteObject[] = [
         element: <MenuDetailPage />,
       },
     ],
+  },
+  {
+    path: 'settings/tags',
+    element: <TagSettingsPage />,
+    title: '설정',
   },
 ];
 
