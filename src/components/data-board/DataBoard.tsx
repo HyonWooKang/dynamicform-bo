@@ -19,6 +19,9 @@ type DataBoardProps<T> = {
   searchPlaceholder?: string;
   onSearch?: (keyword: string) => void;
   actions?: DataBoardAction<T>[];
+  headerActions?: ReactNode;
+  totalCount?: number;
+  showSearch?: boolean;
 };
 
 export default function DataBoard<T extends Record<string, any>>({
@@ -28,6 +31,9 @@ export default function DataBoard<T extends Record<string, any>>({
   searchPlaceholder = '검색어를 입력하세요',
   onSearch,
   actions = [],
+  headerActions,
+  totalCount,
+  showSearch = true,
 }: DataBoardProps<T>) {
   const [keyword, setKeyword] = useState('');
 
@@ -47,33 +53,45 @@ export default function DataBoard<T extends Record<string, any>>({
     }
   };
 
+  const displayCount = totalCount ?? filteredData.length;
+  const showControls = showSearch || !!headerActions;
+
   return (
     <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
       <div className="flex flex-col gap-4 border-b border-gray-100 px-6 py-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
           <p className="text-sm text-gray-500">
-            총 {filteredData.length.toLocaleString()}건이 검색되었습니다.
+            총 {displayCount.toLocaleString()}건이 검색되었습니다.
           </p>
         </div>
-        <form
-          onSubmit={handleSubmit}
-          className="flex w-full gap-2 md:w-auto md:min-w-[280px]"
-        >
-          <input
-            type="search"
-            value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
-            placeholder={searchPlaceholder}
-            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
-          >
-            검색
-          </button>
-        </form>
+        {showControls ? (
+          <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center md:justify-end">
+            {showSearch ? (
+              <form
+                onSubmit={handleSubmit}
+                className="flex flex-1 gap-2 md:w-auto md:min-w-[260px]"
+              >
+                <input
+                  type="search"
+                  value={keyword}
+                  onChange={(event) => setKeyword(event.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                />
+                <button
+                  type="submit"
+                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
+                >
+                  검색
+                </button>
+              </form>
+            ) : null}
+            {headerActions ? (
+              <div className="flex justify-end md:justify-start">{headerActions}</div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <div className="overflow-x-auto px-6 py-4">

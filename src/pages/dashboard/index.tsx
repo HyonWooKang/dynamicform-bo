@@ -1,7 +1,3 @@
-import AnalyticsOverview from '@/components/analytics/AnalyticsOverview';
-import DataBoard from '@/components/data-board/DataBoard';
-import KioskStatusMonitor from '@/components/kiosk/KioskStatusMonitor';
-import StatHighlights from '@/components/stats/StatHighlights';
 import {
   dashboardRegionColumns,
   dashboardTopMenuColumns,
@@ -18,13 +14,18 @@ import {
   dashboardTopStoreData,
 } from '@/data/dashboard';
 
+import AnalyticsOverview from '@/components/analytics/AnalyticsOverview';
+import DataBoard from '@/components/data-board/DataBoard';
+import KioskStatusMonitor from '@/components/kiosk/KioskStatusMonitor';
+import StatHighlights from '@/components/stats/StatHighlights';
+
 export default function DashboardPage() {
   return (
     <div className="space-y-8 p-8">
       <div>
         <p className="text-sm font-semibold text-amber-600">MEGI COFFEE</p>
         <h1 className="text-3xl font-bold text-gray-900">
-          커피 브랜드 매출 관리 대시보드
+          MEGI COFFEE 대시보드
         </h1>
         <p className="text-gray-600">
           전국 매장의 실시간 매출 흐름, 인기 메뉴, 키오스크 상태까지 한 번에

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   ArrowLeft,
   ChefHat,
@@ -7,21 +8,30 @@ import {
 } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import MenuFormDialog from '@/components/menu/MenuFormDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { initialMenuItems } from '@/data/menu';
+import { useMenu } from '@/contexts/menu';
 import type { MenuItem } from '@/types/menu';
 
 export default function MenuDetailPage() {
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const navigate = useNavigate();
   const { menuId } = useParams<{ menuId: string }>();
   const location = useLocation();
   const state = location.state as { menu?: MenuItem } | null;
-  const menu =
-    state?.menu ?? initialMenuItems.find((item) => item.id === menuId);
+  const { menus, updateMenu } = useMenu();
+  const menuFromContext = menus.find((item) => item.id === menuId);
+  const menu = menuFromContext ?? state?.menu ?? null;
+  const canEdit = !!menuFromContext;
 
   const handleGoBack = () => {
     navigate('/menu');
+  };
+
+  const handleMenuUpdate = (updatedMenu: MenuItem) => {
+    updateMenu(updatedMenu);
+    setIsEditOpen(false);
   };
 
   if (!menu) {
@@ -52,7 +62,7 @@ export default function MenuDetailPage() {
           <h1 className="text-3xl font-bold text-gray-900">{menu.name}</h1>
           <p className="text-gray-600">{menu.description}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge
             className={
               menu.availability === '시즌'
@@ -77,6 +87,19 @@ export default function MenuDetailPage() {
               {menu.seasonTerm}
             </Badge>
           ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditOpen(true)}
+            disabled={!canEdit}
+            className="ml-auto"
+            title={
+              canEdit ? undefined : '목록에서 진입한 메뉴만 수정할 수 있습니다.'
+            }
+          >
+            레시피 수정
+          </Button>
         </div>
       </div>
 
@@ -209,6 +232,13 @@ export default function MenuDetailPage() {
           </ul>
         </section>
       </div>
+      <MenuFormDialog
+        open={isEditOpen}
+        mode="edit"
+        initialMenu={menuFromContext ?? menu}
+        onClose={() => setIsEditOpen(false)}
+        onSubmit={handleMenuUpdate}
+      />
     </div>
   );
 }
