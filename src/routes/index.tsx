@@ -1,9 +1,11 @@
-import { Navigate, type RouteObject } from 'react-router-dom';
+import { Navigate, Outlet, type RouteObject } from 'react-router-dom';
 
 import AuthGuard from '@/layouts/authGuard';
 import LoginPage from '@/layouts/login';
 import AnalyticsPage from '@/pages/analytics';
 import DashboardPage from '@/pages/dashboard';
+import MenuDetailPage from '@/pages/menu/detail';
+import MenuManagementPage from '@/pages/menu';
 
 export type ExtendRouteObject = RouteObject & {
   title?: string;
@@ -20,6 +22,21 @@ const protectedChildRoutes: ExtendRouteObject[] = [
     path: 'analytics',
     element: <AnalyticsPage />,
     title: '통계',
+  },
+  {
+    path: 'menu',
+    title: '메뉴 관리',
+    element: <Outlet />,
+    children: [
+      {
+        index: true,
+        element: <MenuManagementPage />,
+      },
+      {
+        path: ':menuId',
+        element: <MenuDetailPage />,
+      },
+    ],
   },
 ];
 
