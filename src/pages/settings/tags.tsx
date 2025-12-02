@@ -27,7 +27,7 @@ export default function TagSettingsPage() {
     event.preventDefault();
     const trimmed = newTag.trim();
     if (!trimmed) {
-      setError('태그명을 입력하세요.');
+      setError('태그명을 입력해 주세요.');
       return;
     }
     if (tags.includes(trimmed)) {
@@ -48,10 +48,10 @@ export default function TagSettingsPage() {
   return (
     <div className="space-y-8 p-8">
       <div>
-        <p className="text-sm font-semibold text-amber-600">설정</p>
-        <h1 className="text-3xl font-bold text-gray-900">태그 관리</h1>
+        <p className="text-sm font-semibold text-amber-600">카테고리 관리</p>
+        <h1 className="text-3xl font-bold text-gray-900">카테고리 관리</h1>
         <p className="text-gray-600">
-          태그를 추가하거나 삭제하고 각 태그와 연결된 메뉴 수를 확인하세요.
+          태그(카테고리)를 추가/삭제하고, 해당 태그와 연결된 메뉴 수량을 확인하세요.
         </p>
       </div>
 
@@ -64,7 +64,7 @@ export default function TagSettingsPage() {
                 setNewTag(event.target.value);
                 setError('');
               }}
-              placeholder="추가할 태그명을 입력하세요"
+              placeholder="추가할 태그명을 입력해 주세요."
             />
             <Button type="submit" className="gap-2 md:w-40">
               <Plus className="h-4 w-4" />
@@ -73,7 +73,7 @@ export default function TagSettingsPage() {
           </div>
           {error ? <p className="text-sm text-red-500">{error}</p> : null}
           <p className="text-sm text-gray-500">
-            메뉴 등록/수정 시 여기서 등록한 태그 중에서 선택할 수 있습니다.
+            메뉴 등록/수정 시 선택할 수 있도록 사전에 태그를 등록해 두세요.
           </p>
         </form>
       </section>
