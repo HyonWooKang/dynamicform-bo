@@ -2,7 +2,6 @@
 
 import AuthGuard from '@/layouts/authGuard';
 import LoginPage from '@/layouts/login';
-import AnalyticsPage from '@/pages/analytics';
 import BranchCreatePage from '@/pages/branch/create';
 import BranchDetailPage from '@/pages/branch/detail';
 import BranchManagementPage from '@/pages/branch';
@@ -22,11 +21,6 @@ const protectedChildRoutes: ExtendRouteObject[] = [
     path: 'dashboard',
     element: <DashboardPage />,
     title: '대시보드',
-  },
-  {
-    path: 'analytics',
-    element: <AnalyticsPage />,
-    title: '분석',
   },
   {
     path: 'branch',
