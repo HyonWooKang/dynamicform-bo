@@ -1,17 +1,88 @@
 ﻿import { useMemo, useState, type ReactNode } from 'react';
 import {
+  Chart as ChartJS,
+  CategoryScale,
+  Filler,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Tooltip,
+} from 'chart.js';
+import type { TooltipItem } from 'chart.js';
+import {
   ArrowLeft,
   ClipboardList,
   MapPin,
   TrendingUp,
   Users,
 } from 'lucide-react';
+import { Line } from 'react-chartjs-2';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import BranchFormDialog from '@/components/branch/BranchFormDialog';
 import { Button } from '@/components/ui/button';
 import { useBranch } from '@/contexts/branch';
 import type { BranchRow } from '@/types/branch';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend,
+);
+
+const HISTORY_LENGTH = 13;
+
+type RevenuePoint = {
+  label: string;
+  value: number;
+};
+
+const formatCurrency = (value: number) =>
+  `${value.toLocaleString()}원`;
+
+const formatPercent = (value: number) =>
+  `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
+
+const buildRevenueHistory = (branch: BranchRow | null): RevenuePoint[] => {
+  if (!branch) return [];
+
+  const seed = branch.id
+    .split('')
+    .reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
+
+  const multipliers = Array.from({ length: HISTORY_LENGTH }, (_, idx) => {
+    const drift = 0.82 + idx * 0.015;
+    const noise = Math.sin(seed + idx * 1.7) * 0.05;
+    return Math.max(0.6, drift + noise);
+  });
+
+  const latest = multipliers[multipliers.length - 1] ?? 1;
+  const normalized = multipliers.map((value) => value / latest);
+  const now = new Date();
+
+  return normalized.map((multiplier, idx) => {
+    const monthOffset = HISTORY_LENGTH - 1 - idx;
+    const monthDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - monthOffset,
+      1,
+    );
+    const label = `${monthDate.getFullYear()}.${String(
+      monthDate.getMonth() + 1,
+    ).padStart(2, '0')}`;
+    const value = Math.max(
+      12000000,
+      Math.round((branch.monthlyRevenue * multiplier) / 1000) * 1000,
+    );
+
+    return { label, value };
+  });
+};
 
 export default function BranchDetailPage() {
   const navigate = useNavigate();
@@ -22,6 +93,123 @@ export default function BranchDetailPage() {
   const branchFromContext = branches.find((branch) => branch.id === branchId);
   const branch = branchFromContext ?? state?.branch ?? null;
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const revenueHistory = useMemo(
+    () => buildRevenueHistory(branch),
+    [branch],
+  );
+
+  const revenueChartData = useMemo(
+    () => ({
+      labels: revenueHistory.map((item) => item.label),
+      datasets: [
+        {
+          label: '월 매출',
+          data: revenueHistory.map((item) => item.value),
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.15)',
+          tension: 0.4,
+          fill: {
+            target: 'origin',
+            above: 'rgba(99, 102, 241, 0.12)',
+          },
+          pointRadius: 3,
+          pointBackgroundColor: '#4f46e5',
+        },
+      ],
+    }),
+    [revenueHistory],
+  );
+
+  const revenueChartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: 'index' as const,
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context: TooltipItem<'line'>) =>
+              formatCurrency(Number(context.raw)),
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          ticks: {
+            callback: (value: string | number) =>
+              `${Math.round(Number(value) / 1000000)}백만원`,
+          },
+          grid: {
+            color: '#f1f5f9',
+          },
+        },
+        x: {
+          grid: {
+            display: false,
+          },
+        },
+      },
+    }),
+    [],
+  );
+
+  const revenueSummary = useMemo(() => {
+    if (revenueHistory.length === 0) {
+      return [];
+    }
+
+    const latestValue = revenueHistory[revenueHistory.length - 1]?.value ?? 0;
+    const previousValue =
+      revenueHistory[revenueHistory.length - 2]?.value ?? latestValue;
+    const yearAgoValue = revenueHistory[0]?.value ?? latestValue;
+    const avgMonths = Math.min(3, revenueHistory.length);
+    const threeMonthAverage = Math.round(
+      revenueHistory
+        .slice(-avgMonths)
+        .reduce((sum, item) => sum + item.value, 0) / avgMonths,
+    );
+    const bestMonth = revenueHistory.reduce(
+      (prev, item) => (item.value > prev.value ? item : prev),
+      revenueHistory[0],
+    );
+
+    const momPercent = previousValue
+      ? ((latestValue - previousValue) / previousValue) * 100
+      : 0;
+    const yoyPercent = yearAgoValue
+      ? ((latestValue - yearAgoValue) / yearAgoValue) * 100
+      : 0;
+
+    return [
+      {
+        label: '이번 달 매출',
+        value: formatCurrency(latestValue),
+        helper: `전년 동월 대비 ${formatPercent(yoyPercent)}`,
+      },
+      {
+        label: '전월 대비',
+        value: formatPercent(momPercent),
+        helper: `${formatCurrency(Math.abs(latestValue - previousValue))} ${
+          latestValue >= previousValue ? '증가' : '감소'
+        }`,
+      },
+      {
+        label: '3개월 평균',
+        value: formatCurrency(threeMonthAverage),
+        helper: '최근 3개월 기준',
+      },
+      {
+        label: '최고 매출',
+        value: formatCurrency(bestMonth.value),
+        helper: bestMonth.label,
+      },
+    ];
+  }, [revenueHistory]);
 
   const ordersSummary = useMemo(() => {
     if (!branch) return [];
@@ -92,6 +280,37 @@ export default function BranchDetailPage() {
             value={`${branch.complaintsLastQuarter.toLocaleString()}건`}
             icon={<ClipboardList className="h-4 w-4" />}
           />
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-gray-900">
+                <TrendingUp className="h-5 w-5 text-indigo-500" />
+                <h3 className="text-lg font-semibold">13개월 매출 추이</h3>
+              </div>
+              <p className="text-xs text-gray-500">단위: 원</p>
+            </div>
+            <div className="mt-4 h-72">
+              <Line data={revenueChartData} options={revenueChartOptions} />
+            </div>
+          </div>
+          <div className="grid flex-shrink-0 gap-3 sm:grid-cols-2 lg:w-72">
+            {revenueSummary.map((card) => (
+              <div
+                key={card.label}
+                className="rounded-xl border border-gray-100 bg-gray-50 p-4"
+              >
+                <p className="text-xs uppercase text-gray-500">{card.label}</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {card.value}
+                </p>
+                <p className="text-xs text-gray-500">{card.helper}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
