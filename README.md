@@ -1,15 +1,27 @@
-# BO 프로젝트
+# BO 프로젝트 - Megi Coffee BO
 
-DynamicForm을 기반으로 한 BO를 기획하였으나 성능 개선을 위해 컴포넌트 설계를 변경하여 진행하였습니다.
-개인적으로 AI의 도움을 일부 받고 진행했던 DynamicForm 프로젝트를 참고하여 기획을 조금 더 실사용에 맞게 변경하였으며
-기본 컴포넌트 설정 후 ChatGPT Codex Extension을 사용하여 개발하였습니다.
+Codex를 사용하여 작성한 커피 브랜드 BO 프로젝트 입니다.
+초기 기획은 DynamicForm으로 작성하여 하나의 Form에서 모든 페이지를 작성할 수 있게 하려고 했으나
+성능과 유지보수를 고려하여 DynamicForm은 사용하지 않았습니다.
 
-## Megi Coffee 관리 BO
+FYI, 해당 프로젝트는 이전에 기획하고 로컬에서 DynamicForm을 제작해보던 개인 사이드 프로젝트를 수정하여 만들었습니다.
 
-### 주요 기능
+## 기술 스택
 
-- 메인보드
-- 메뉴관리
+- react@19.1.1
+- react-router-dom@7.9.4
+- vite@7.1.7
+- typescript@5.9.x
+- tailwindcss@3.4.18
+- react-hook-form@7.65.0
+- zod@4.1.12
+- Context API
+- chart.js@4.5.1
+
+### 작성된 페이지
+
+- 대시보드
 - 지점관리
+- 키오스크 관리
+- 메뉴관리
 - 매출관리
-- 추가중..
