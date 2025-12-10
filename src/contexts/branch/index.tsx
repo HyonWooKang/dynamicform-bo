@@ -6,7 +6,7 @@
   type ReactNode,
 } from 'react';
 
-import { branchRows } from '@/data/branch';
+import { branchRows } from '@/data/branches';
 import type { BranchRow } from '@/types/branch';
 
 type BranchContextValue = {

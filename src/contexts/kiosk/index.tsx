@@ -6,7 +6,7 @@
   type ReactNode,
 } from 'react';
 
-import { kioskDevices } from '@/data/kiosk';
+import { kioskDevices } from '@/data/kiosks';
 import type { KioskDevice, KioskPowerStatus } from '@/types/kiosk';
 
 type KioskContextValue = {
@@ -66,4 +66,3 @@ export const useKiosk = () => {
   }
   return context;
 };
-

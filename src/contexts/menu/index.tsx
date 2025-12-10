@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { initialMenuItems } from '@/data/menu';
+import { initialMenuItems } from '@/data/menus';
 import type { MenuItem } from '@/types/menu';
 
 type MenuContextValue = {

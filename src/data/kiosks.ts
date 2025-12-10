@@ -1,6 +1,6 @@
 import type { KioskDevice } from '@/types/kiosk';
 
-import { branchRows } from './branch';
+import { branchRows } from './branches';
 
 const softwareVersions = ['v3.2.5', 'v3.2.2', 'v3.1.9'];
 const installDates = ['2023-10-28', '2023-11-12', '2023-12-04', '2024-01-08'];
@@ -80,4 +80,3 @@ export const kioskDevices: KioskDevice[] = branchRows.slice(0, 12).flatMap((bran
     };
   });
 });
-

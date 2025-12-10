@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import { initialMenuItems } from '@/data/menu';
+import { initialMenuItems } from '@/data/menus';
 
 const initialTags = Array.from(
   new Set(initialMenuItems.flatMap((menu) => menu.tags)),
