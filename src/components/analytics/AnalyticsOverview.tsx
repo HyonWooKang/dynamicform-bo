@@ -1,4 +1,15 @@
 import { useMemo } from 'react';
+import { Doughnut, Line } from 'react-chartjs-2';
+import {
+  ArcElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LineElement,
+  LinearScale,
+  PointElement,
+  Tooltip,
+} from 'chart.js';
 
 import type {
   HighlightMetric,
@@ -6,23 +17,15 @@ import type {
   TrendPoint,
 } from '@/types/charts';
 
-function buildPieGradient(slices: PieSlice[]) {
-  const total = slices.reduce((sum, slice) => sum + slice.value, 0);
-  if (total === 0) {
-    return 'conic-gradient(#e5e7eb 0deg, #e5e7eb 360deg)';
-  }
-
-  let currentAngle = 0;
-  const stops = slices.map((slice) => {
-    const degrees = (slice.value / total) * 360;
-    const start = currentAngle;
-    const end = currentAngle + degrees;
-    currentAngle = end;
-    return `${slice.color} ${start}deg ${end}deg`;
-  });
-
-  return `conic-gradient(${stops.join(', ')})`;
-}
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  Tooltip,
+  Legend,
+);
 
 type AnalyticsOverviewProps = {
   title: string;
@@ -39,8 +42,80 @@ export default function AnalyticsOverview({
   pie,
   metrics = [],
 }: AnalyticsOverviewProps) {
-  const maxValue = Math.max(...trend.map((point) => point.value), 1);
-  const pieGradient = useMemo(() => buildPieGradient(pie), [pie]);
+  const safeTrend = trend.length
+    ? trend
+    : [{ label: '데이터 없음', value: 0 }];
+  const safePie = pie.length
+    ? pie
+    : [{ label: '데이터 없음', value: 1, color: '#e5e7eb' }];
+
+  const lineData = useMemo(
+    () => ({
+      labels: safeTrend.map((point) => point.label),
+      datasets: [
+        {
+          label: '매출',
+          data: safeTrend.map((point) => point.value),
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.15)',
+          tension: 0.35,
+          fill: {
+            target: 'origin',
+            above: 'rgba(99, 102, 241, 0.12)',
+          },
+          pointRadius: 3,
+          pointBackgroundColor: '#4f46e5',
+        },
+      ],
+    }),
+    [safeTrend],
+  );
+
+  const lineOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' as const },
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          grid: { color: '#f1f5f9' },
+          ticks: {
+            callback: (value: string | number) =>
+              `${Math.round(Number(value) / 1_000_000)}백만`,
+          },
+        },
+        x: { grid: { display: false } },
+      },
+    }),
+    [],
+  );
+
+  const doughnutData = useMemo(
+    () => ({
+      labels: safePie.map((slice) => slice.label),
+      datasets: [
+        {
+          data: safePie.map((slice) => slice.value),
+          backgroundColor: safePie.map((slice) => slice.color),
+          borderColor: '#ffffff',
+          borderWidth: 2,
+        },
+      ],
+    }),
+    [safePie],
+  );
+
+  const doughnutOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: { legend: { display: false } },
+    }),
+    [],
+  );
+
   const pieTotal = pie.reduce((sum, slice) => sum + slice.value, 0) || 1;
 
   return (
@@ -55,32 +130,17 @@ export default function AnalyticsOverview({
       <div className="grid gap-8 px-6 py-6 md:grid-cols-2">
         <div>
           <p className="mb-4 text-sm font-semibold text-gray-500">매출 추이</p>
-          <div className="flex h-48 items-end gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 pb-4 pt-6">
-            {trend.map((point) => (
-              <div key={point.label} className="flex-1 text-center">
-                <div
-                  className="mx-auto w-4 rounded-full bg-indigo-500"
-                  style={{
-                    height: `${(point.value / maxValue) * 100}%`,
-                    minHeight: point.value ? 12 : 4,
-                  }}
-                />
-                <div className="mt-3 text-xs text-gray-500">{point.label}</div>
-                <div className="text-xs font-semibold text-gray-700">
-                  {point.value.toLocaleString()}
-                </div>
-              </div>
-            ))}
+          <div className="h-64 rounded-xl border border-gray-100 bg-gray-50 p-4">
+            <Line data={lineData} options={lineOptions} />
           </div>
         </div>
 
         <div>
           <p className="mb-4 text-sm font-semibold text-gray-500">판매 비중</p>
           <div className="flex flex-col gap-6 rounded-xl border border-gray-100 bg-gray-50 p-6 md:flex-row md:items-center">
-            <div
-              className="mx-auto h-40 w-40 rounded-full border border-white shadow-inner"
-              style={{ backgroundImage: pieGradient }}
-            />
+            <div className="mx-auto h-40 w-40">
+              <Doughnut data={doughnutData} options={doughnutOptions} />
+            </div>
 
             <div className="flex-1 space-y-3">
               {pie.map((slice) => (
@@ -93,8 +153,7 @@ export default function AnalyticsOverview({
                     {slice.label}
                   </div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {Math.round((slice.value / pieTotal) * 100)}
-                    %
+                    {Math.round((slice.value / pieTotal) * 100)}%
                   </div>
                 </div>
               ))}
