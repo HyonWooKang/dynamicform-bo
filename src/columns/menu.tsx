@@ -12,6 +12,7 @@ export const menuBoardColumns: DataBoardColumn<MenuItem>[] = [
       <div className="space-y-1">
         <Link
           to={`/menu/${row.id}`}
+          state={{ menu: row }}
           className="font-semibold text-indigo-600 hover:underline"
         >
           {row.name}

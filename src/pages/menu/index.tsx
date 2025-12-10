@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 import DataBoard from '@/components/data-board/DataBoard';
 import MenuFormDialog from '@/components/menu/MenuFormDialog';
@@ -53,7 +52,6 @@ export default function MenuManagementPage() {
   const [filters, setFilters] = useState<MenuFilters>(defaultFilters);
   const [draftFilters, setDraftFilters] = useState<MenuFilters>(defaultFilters);
   const [page, setPage] = useState(1);
-  const navigate = useNavigate();
 
   const filteredMenus = useMemo(() => {
     const keyword = filters.keyword.trim().toLowerCase();
@@ -146,10 +144,6 @@ export default function MenuManagementPage() {
   const handleResetFilters = () => {
     setDraftFilters(defaultFilters);
     setFilters(defaultFilters);
-  };
-
-  const handleNavigateDetail = (menu: MenuItem) => {
-    navigate(`/menu/${menu.id}`, { state: { menu } });
   };
 
   return (
@@ -274,13 +268,6 @@ export default function MenuManagementPage() {
             새 메뉴 등록
           </Button>
         }
-        actions={[
-          {
-            label: '상세보기',
-            variant: 'ghost',
-            onClick: (row) => handleNavigateDetail(row),
-          },
-        ]}
       />
 
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
