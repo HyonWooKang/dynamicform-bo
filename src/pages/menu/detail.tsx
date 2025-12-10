@@ -1,11 +1,24 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  Filler,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Tooltip,
+} from 'chart.js';
+import type { TooltipItem } from 'chart.js';
 import {
   ArrowLeft,
   ChefHat,
   MonitorCheck,
   Sparkles,
+  TrendingUp,
   UtensilsCrossed,
 } from 'lucide-react';
+import { Line } from 'react-chartjs-2';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import MenuFormDialog from '@/components/menu/MenuFormDialog';
@@ -13,6 +26,72 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useMenu } from '@/contexts/menu';
 import type { MenuItem } from '@/types/menu';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend,
+);
+
+const HISTORY_LENGTH = 13;
+
+const isIcedMenu = (menu: MenuItem) =>
+  /아이스|ICE/i.test(menu.name) || menu.tags.some((tag) => /아이스/i.test(tag));
+
+const isWinterMenu = (menu: MenuItem) =>
+  /라떼|핫|초코|윈터|연말/.test(menu.name) ||
+  menu.tags.some((tag) => /겨울|핫/i.test(tag));
+
+const buildSalesHistory = (menu: MenuItem | null) => {
+  if (!menu) return [];
+  const now = new Date();
+  const seed = menu.id
+    .split('')
+    .reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
+
+  return Array.from({ length: HISTORY_LENGTH }, (_, idx) => {
+    const offset = HISTORY_LENGTH - 1 - idx;
+    const monthDate = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    const month = monthDate.getMonth();
+
+    const seasonalBoost = (() => {
+      if (isIcedMenu(menu)) {
+        if (month >= 5 && month <= 8) return 1.35;
+        if (month === 4 || month === 9) return 1.15;
+        return 0.85;
+      }
+      if (isWinterMenu(menu)) {
+        if (month === 11 || month <= 1) return 1.4;
+        if (month === 2 || month === 10) return 1.15;
+        return 0.9;
+      }
+      return 1;
+    })();
+
+    const base = 1600 + (menu.price / 100) * 8;
+    const trend = 1 + (idx - HISTORY_LENGTH / 2) * 0.01;
+    const noise = 1 + Math.sin(seed + idx * 1.2) * 0.08;
+    const value = Math.max(
+      400,
+      Math.round(base * seasonalBoost * trend * noise),
+    );
+
+    return {
+      label: `${monthDate.getFullYear()}.${String(monthDate.getMonth() + 1).padStart(2, '0')}`,
+      value,
+    };
+  });
+};
+
+const formatVolume = (value: number) =>
+  `${value.toLocaleString()}잔`;
+
+const formatPercent = (value: number) =>
+  `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
 
 export default function MenuDetailPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -24,6 +103,117 @@ export default function MenuDetailPage() {
   const menuFromContext = menus.find((item) => item.id === menuId);
   const menu = menuFromContext ?? state?.menu ?? null;
   const canEdit = !!menuFromContext;
+  const salesHistory = useMemo(() => buildSalesHistory(menu), [menu]);
+
+  const salesChartData = useMemo(
+    () => ({
+      labels: salesHistory.map((point) => point.label),
+      datasets: [
+        {
+          label: '월 판매량',
+          data: salesHistory.map((point) => point.value),
+          borderColor: '#fb7185',
+          backgroundColor: 'rgba(251, 113, 133, 0.15)',
+          tension: 0.4,
+          fill: {
+            target: 'origin',
+            above: 'rgba(251, 113, 133, 0.12)',
+          },
+          pointRadius: 3,
+          pointBackgroundColor: '#f43f5e',
+        },
+      ],
+    }),
+    [salesHistory],
+  );
+
+  const salesChartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: 'index' as const,
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context: TooltipItem<'line'>) =>
+              formatVolume(Number(context.raw)),
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value: string | number) =>
+              `${Math.round(Number(value) / 100)}백잔`,
+          },
+          grid: { color: '#f1f5f9' },
+        },
+        x: { grid: { display: false } },
+      },
+    }),
+    [],
+  );
+
+  const salesSummary = useMemo(() => {
+    if (salesHistory.length === 0) return [];
+
+    const latest = salesHistory[salesHistory.length - 1]!;
+    const previous = salesHistory[salesHistory.length - 2] ?? latest;
+    const yearAgo = salesHistory[0] ?? latest;
+    const avgMonths = Math.min(3, salesHistory.length);
+    const rollingAvg = Math.round(
+      salesHistory
+        .slice(-avgMonths)
+        .reduce((sum, item) => sum + item.value, 0) / avgMonths,
+    );
+    const best = salesHistory.reduce(
+      (prev, item) => (item.value > prev.value ? item : prev),
+      salesHistory[0],
+    );
+
+    const momPercent = previous.value
+      ? ((latest.value - previous.value) / previous.value) * 100
+      : 0;
+    const yoyPercent = yearAgo.value
+      ? ((latest.value - yearAgo.value) / yearAgo.value) * 100
+      : 0;
+
+    const peakSeason = (() => {
+      if (isIcedMenu(menu!)) return '여름 (6~8월)';
+      if (isWinterMenu(menu!)) return '겨울 (12~2월)';
+      return '연중 고른 판매';
+    })();
+
+    return [
+      {
+        label: '최근 월 판매량',
+        value: formatVolume(latest.value),
+        helper: `전년 동월 대비 ${formatPercent(yoyPercent)}`,
+      },
+      {
+        label: '전월 대비',
+        value: formatPercent(momPercent),
+        helper: `${formatVolume(Math.abs(latest.value - previous.value))} ${
+          latest.value >= previous.value ? '증가' : '감소'
+        }`,
+      },
+      {
+        label: '3개월 평균',
+        value: formatVolume(rollingAvg),
+        helper: '최근 3개월 기준',
+      },
+      {
+        label: '피크 시즌',
+        value: peakSeason,
+        helper: `${best.label} 최고 ${formatVolume(best.value)}`,
+      },
+    ];
+  }, [salesHistory, menu]);
 
   const handleGoBack = () => {
     navigate('/menu');
@@ -149,6 +339,37 @@ export default function MenuDetailPage() {
               alt={menu.name}
               className="h-64 w-full object-cover lg:h-full"
             />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-gray-900">
+                <TrendingUp className="h-5 w-5 text-rose-500" />
+                <h3 className="text-lg font-semibold">13개월 판매 추이</h3>
+              </div>
+              <p className="text-xs text-gray-500">단위: 잔</p>
+            </div>
+            <div className="mt-4 h-72">
+              <Line data={salesChartData} options={salesChartOptions} />
+            </div>
+          </div>
+          <div className="grid flex-shrink-0 gap-3 sm:grid-cols-2 lg:w-72">
+            {salesSummary.map((card) => (
+              <div
+                key={card.label}
+                className="rounded-xl border border-gray-100 bg-gray-50 p-4"
+              >
+                <p className="text-xs uppercase text-gray-500">{card.label}</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {card.value}
+                </p>
+                <p className="text-xs text-gray-500">{card.helper}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
