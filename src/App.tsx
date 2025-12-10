@@ -2,6 +2,7 @@
 
 import { AuthProvider } from './contexts/auth';
 import { BranchProvider } from './contexts/branch';
+import { KioskProvider } from './contexts/kiosk';
 import { LoadingProvider } from './contexts/loading';
 import { MenuProvider } from './contexts/menu';
 import { TagProvider } from './contexts/tags';
@@ -14,11 +15,13 @@ function App() {
     <AuthProvider>
       <LoadingProvider>
         <BranchProvider>
-          <MenuProvider>
-            <TagProvider>
-              <RouterProvider router={router} />
-            </TagProvider>
-          </MenuProvider>
+          <KioskProvider>
+            <MenuProvider>
+              <TagProvider>
+                <RouterProvider router={router} />
+              </TagProvider>
+            </MenuProvider>
+          </KioskProvider>
         </BranchProvider>
       </LoadingProvider>
     </AuthProvider>

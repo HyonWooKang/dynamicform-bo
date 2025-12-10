@@ -7,6 +7,7 @@ import BranchCreatePage from '@/pages/branch/create';
 import BranchDetailPage from '@/pages/branch/detail';
 import BranchManagementPage from '@/pages/branch';
 import DashboardPage from '@/pages/dashboard';
+import KioskManagementPage from '@/pages/kiosk';
 import MenuDetailPage from '@/pages/menu/detail';
 import MenuManagementPage from '@/pages/menu';
 import TagSettingsPage from '@/pages/settings/tags';
@@ -45,6 +46,11 @@ const protectedChildRoutes: ExtendRouteObject[] = [
         element: <BranchDetailPage />,
       },
     ],
+  },
+  {
+    path: 'kiosk',
+    element: <KioskManagementPage />,
+    title: '키오스크 관리',
   },
   {
     path: 'menu',
