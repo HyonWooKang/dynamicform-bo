@@ -1,8 +1,25 @@
 ﻿import type { DataBoardColumn } from '@/components/data-board/DataBoard';
 import type { BranchRow } from '@/types/branch';
 
-export const branchColumns: DataBoardColumn<BranchRow>[] = [
-  { key: 'branch', header: '지점' },
+export const createBranchColumns = (
+  onSelect: (branch: BranchRow) => void,
+): DataBoardColumn<BranchRow>[] => [
+  {
+    key: 'branch',
+    header: '지점',
+    render: (row) => (
+      <button
+        type="button"
+        onClick={() => onSelect(row)}
+        className="text-left"
+      >
+        <p className="font-semibold text-indigo-600 underline-offset-2 hover:underline">
+          {row.branch}
+        </p>
+        <p className="text-xs text-gray-500">{row.region}</p>
+      </button>
+    ),
+  },
   { key: 'operatingHours', header: '운영 시간' },
   {
     key: 'monthlyRevenue',

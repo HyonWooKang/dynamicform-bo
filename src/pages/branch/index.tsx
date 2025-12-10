@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+﻿import { useCallback, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,7 +12,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import { branchColumns } from '@/columns/branch';
+import { createBranchColumns } from '@/columns/branch';
 import { useBranch } from '@/contexts/branch';
 
 const PAGE_SIZE = 10;
@@ -60,9 +60,17 @@ export default function BranchManagementPage() {
     setPage(1);
   };
 
-  const handleNavigateDetail = (branchId: string) => {
-    navigate(`/branch/${branchId}`);
-  };
+  const handleNavigateDetail = useCallback(
+    (branchId: string) => {
+      navigate(`/branch/${branchId}`);
+    },
+    [navigate],
+  );
+
+  const columns = useMemo(
+    () => createBranchColumns((row) => handleNavigateDetail(row.id)),
+    [handleNavigateDetail],
+  );
 
   const handleNavigateCreate = () => {
     navigate('/branch/create');
@@ -86,18 +94,11 @@ export default function BranchManagementPage() {
 
       <DataBoard
         title="지점 현황 보드"
-        columns={branchColumns}
+        columns={columns}
         data={paged}
         totalCount={filtered.length}
         searchPlaceholder="지점명 · 점장 · 권역 검색"
         onSearch={handleSearch}
-        actions={[
-          {
-            label: '상세보기',
-            variant: 'ghost',
-            onClick: (row) => handleNavigateDetail(row.id),
-          },
-        ]}
       />
 
       <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
