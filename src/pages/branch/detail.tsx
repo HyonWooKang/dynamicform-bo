@@ -23,6 +23,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import BranchFormDialog from '@/components/branch/BranchFormDialog';
 import { Button } from '@/components/ui/button';
 import { useBranch } from '@/contexts/branch';
+import { buildBranchRevenueHistory } from '@/libs/utils/insights';
 import type { BranchRow } from '@/types/branch';
 
 ChartJS.register(
@@ -35,54 +36,10 @@ ChartJS.register(
   Legend,
 );
 
-const HISTORY_LENGTH = 13;
-
-type RevenuePoint = {
-  label: string;
-  value: number;
-};
-
-const formatCurrency = (value: number) =>
-  `${value.toLocaleString()}원`;
+const formatCurrency = (value: number) => `${value.toLocaleString()}원`;
 
 const formatPercent = (value: number) =>
   `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
-
-const buildRevenueHistory = (branch: BranchRow | null): RevenuePoint[] => {
-  if (!branch) return [];
-
-  const seed = branch.id
-    .split('')
-    .reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
-
-  const multipliers = Array.from({ length: HISTORY_LENGTH }, (_, idx) => {
-    const drift = 0.82 + idx * 0.015;
-    const noise = Math.sin(seed + idx * 1.7) * 0.05;
-    return Math.max(0.6, drift + noise);
-  });
-
-  const latest = multipliers[multipliers.length - 1] ?? 1;
-  const normalized = multipliers.map((value) => value / latest);
-  const now = new Date();
-
-  return normalized.map((multiplier, idx) => {
-    const monthOffset = HISTORY_LENGTH - 1 - idx;
-    const monthDate = new Date(
-      now.getFullYear(),
-      now.getMonth() - monthOffset,
-      1,
-    );
-    const label = `${monthDate.getFullYear()}.${String(
-      monthDate.getMonth() + 1,
-    ).padStart(2, '0')}`;
-    const value = Math.max(
-      12000000,
-      Math.round((branch.monthlyRevenue * multiplier) / 1000) * 1000,
-    );
-
-    return { label, value };
-  });
-};
 
 export default function BranchDetailPage() {
   const navigate = useNavigate();
@@ -94,7 +51,7 @@ export default function BranchDetailPage() {
   const branch = branchFromContext ?? state?.branch ?? null;
   const [isEditOpen, setIsEditOpen] = useState(false);
   const revenueHistory = useMemo(
-    () => buildRevenueHistory(branch),
+    () => buildBranchRevenueHistory(branch),
     [branch],
   );
 

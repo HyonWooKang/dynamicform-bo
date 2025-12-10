@@ -25,6 +25,11 @@ import MenuFormDialog from '@/components/menu/MenuFormDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useMenu } from '@/contexts/menu';
+import {
+  buildMenuSalesHistory,
+  isIcedMenu,
+  isWinterMenu,
+} from '@/libs/utils/insights';
 import type { MenuItem } from '@/types/menu';
 
 ChartJS.register(
@@ -36,56 +41,6 @@ ChartJS.register(
   Tooltip,
   Legend,
 );
-
-const HISTORY_LENGTH = 13;
-
-const isIcedMenu = (menu: MenuItem) =>
-  /아이스|ICE/i.test(menu.name) || menu.tags.some((tag) => /아이스/i.test(tag));
-
-const isWinterMenu = (menu: MenuItem) =>
-  /라떼|핫|초코|윈터|연말/.test(menu.name) ||
-  menu.tags.some((tag) => /겨울|핫/i.test(tag));
-
-const buildSalesHistory = (menu: MenuItem | null) => {
-  if (!menu) return [];
-  const now = new Date();
-  const seed = menu.id
-    .split('')
-    .reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
-
-  return Array.from({ length: HISTORY_LENGTH }, (_, idx) => {
-    const offset = HISTORY_LENGTH - 1 - idx;
-    const monthDate = new Date(now.getFullYear(), now.getMonth() - offset, 1);
-    const month = monthDate.getMonth();
-
-    const seasonalBoost = (() => {
-      if (isIcedMenu(menu)) {
-        if (month >= 5 && month <= 8) return 1.35;
-        if (month === 4 || month === 9) return 1.15;
-        return 0.85;
-      }
-      if (isWinterMenu(menu)) {
-        if (month === 11 || month <= 1) return 1.4;
-        if (month === 2 || month === 10) return 1.15;
-        return 0.9;
-      }
-      return 1;
-    })();
-
-    const base = 1600 + (menu.price / 100) * 8;
-    const trend = 1 + (idx - HISTORY_LENGTH / 2) * 0.01;
-    const noise = 1 + Math.sin(seed + idx * 1.2) * 0.08;
-    const value = Math.max(
-      400,
-      Math.round(base * seasonalBoost * trend * noise),
-    );
-
-    return {
-      label: `${monthDate.getFullYear()}.${String(monthDate.getMonth() + 1).padStart(2, '0')}`,
-      value,
-    };
-  });
-};
 
 const formatVolume = (value: number) =>
   `${value.toLocaleString()}잔`;
@@ -103,7 +58,10 @@ export default function MenuDetailPage() {
   const menuFromContext = menus.find((item) => item.id === menuId);
   const menu = menuFromContext ?? state?.menu ?? null;
   const canEdit = !!menuFromContext;
-  const salesHistory = useMemo(() => buildSalesHistory(menu), [menu]);
+  const salesHistory = useMemo(
+    () => buildMenuSalesHistory(menu),
+    [menu],
+  );
 
   const salesChartData = useMemo(
     () => ({
