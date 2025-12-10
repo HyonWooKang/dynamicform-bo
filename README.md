@@ -1,6 +1,6 @@
-# BO 프로젝트 - Megi Coffee BO
+# SuperCoffee BO
 
-Codex를 사용하여 작성한 커피 브랜드 BO 프로젝트 입니다.
+SuperCoffee 브랜드의 백오피스를 Codex로 구현한 프로젝트입니다.
 초기 기획은 DynamicForm으로 작성하여 하나의 Form에서 모든 페이지를 작성할 수 있게 하려고 했으나
 성능과 유지보수를 고려하여 DynamicForm은 사용하지 않았습니다.
 
@@ -18,7 +18,7 @@ FYI, 해당 프로젝트는 이전에 기획하고 로컬에서 DynamicForm을 �
 - Context API
 - chart.js@4.5.1
 
-### 작성된 페이지
+### 작성된 페이지
 
 - 대시보드
 - 지점관리
